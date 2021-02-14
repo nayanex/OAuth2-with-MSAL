@@ -16,3 +16,55 @@ Directory, and you'll use some of the information from there so that authenticat
     
     Together, the above four steps should allow you to have a functional "Sign in with Microsoft" button with the Microsoft Authentication Library, as well as to log back out of the related Microsoft account.
 4. Test your app out in localhost (making sure to use `https`), or feel free to deploy the app as well.
+
+## How to Run the Project Locally
+
+Create `.env` file in the root directory of your project. Provide proper values for the following
+  environment variables:
+
+```bash
+export FLASK_APP=application.py
+export CLIENT_SECRET=.kkk-crying
+export AUTHORITY=https://login.microsoftonline.com/common
+export CLIENT_ID=<your-client-id>
+export REDIRECT_PATH=/getAToken
+export SCOPE=User.Read
+export SESSION_TYPE=filesystem
+```
+
+### Create Virtual Environment
+
+````bash
+# macOS/Linux
+sudo apt-get install python3-venv    # If needed
+python3 -m venv env
+
+# Windows
+python -m venv env
+````
+
+Activate the environment by running 
+
+`source env/bin/activate` # (Linux/macOS) 
+
+or `env\scripts\activate` # (Windows). 
+
+### Install necessary Python dependencies:
+
+`pip install -r requirements.txt`
+
+
+### Run Flask app Locally
+
+launch the program using
+ 
+`python application.py`
+
+
+# Deploying Application to Azure Web Services
+
+After creating an Azure App Service by pointing out your Github or Azure Repos, 
+configure the above environment variables by using the **configuration** settings.
+ 
+<br><img src="https://github.com/nayanex/UdaciZoo/blob/main/images/settings.png"/>
+

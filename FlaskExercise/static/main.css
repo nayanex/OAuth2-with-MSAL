@@ -1,9 +1,9 @@
 html {
   font-family: OpenSans, sans-serif;
-  color: #fff;
+  color: #000;
 }
 body {
-  background: #02B3E4;
+  background: #fff;
 }
 .container {
   display:grid;

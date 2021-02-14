@@ -6,6 +6,7 @@ from config import Config
 from FlaskExercise import app
 from FlaskExercise.models import User
 
+
 @app.route('/')
 @app.route('/home')
 @login_required
@@ -25,18 +26,21 @@ def login():
 
 @app.route('/logout')
 def logout():
-    logout_user() # Log out of Flask session
-    if session.get('user'): # Used MS Login
+    logout_user()  # Log out of Flask session
+    if session.get('user'):  # Used MS Login
         # Wipe out user and its token cache from session
         session.clear()
         # TODO: Also logout from your tenant's web session
         #   And make sure to redirect from there back to the login page
-        pass
+        return redirect(Config.AUTHORITY + '/oauth2/v2.0/logout' +
+                        '?post_logout_redirect_uri=' +
+                        url_for('login', _external=True))
 
     return redirect(url_for('login'))
 
 
-@app.route(Config.REDIRECT_PATH)  # Its absolute URL must match your app's redirect_uri set in AAD
+# Its absolute URL must match your app's redirect_uri set in AAD
+@app.route(Config.REDIRECT_PATH)
 def authorized():
     if request.args.get('state') != session.get('state'):
         return redirect(url_for('home'))  # Failed, go back home
@@ -46,7 +50,13 @@ def authorized():
         cache = _load_cache()
         # TODO: Acquire a token by authorization code from an MSAL app
         #  And replace the error dictionary
-        result = {'error': 'Not Implemented', 'error_description': 'Function not implemented.'}
+        result = _build_msal_app(
+            cache=cache).acquire_token_by_authorization_code(
+                request.args["code"],
+                scopes=Config.SCOPE,
+                redirect_uri=url_for("authorized",
+                                     _external=True,
+                                     _scheme="https"))
         if 'error' in result:
             return render_template('auth_error.html', result=result)
         session['user'] = result.get('id_token_claims')
@@ -54,6 +64,7 @@ def authorized():
         #   but here, we'll just log in with a fake user zero
         #   This is so flask login functionality works appropriately.
         user = User(0)
+        # user=User.query.filter_by(id=session['user']).first()
         login_user(user)
         _save_cache(cache)
 
@@ -74,10 +85,16 @@ def _save_cache(cache):
 
 def _build_msal_app(cache=None, authority=None):
     # TODO: Create and return a Confidential Client Application from msal
-    return msal.ConfidentialClientApplication(Config.client_id, Config.CLIENT_ID, 
-    authority=authority or Config.AUTHORITY)
+    return msal.ConfidentialClientApplication(
+        Config.CLIENT_ID,
+        authority=authority or Config.AUTHORITY,
+        client_credential=Config.CLIENT_SECRET,
+        token_cache=cache)
 
 
 def _build_auth_url(authority=None, scopes=None, state=None):
     # TODO: Get the authorization request URL from a built msal app, and return it
-    return None
+    return _build_msal_app(authority=authority).get_authorization_request_url(
+        scopes or [],
+        state=state or str(uuid.uuid4()),
+        redirect_uri=url_for("authorized", _external=True, _scheme="https"))
