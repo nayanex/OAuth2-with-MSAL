@@ -2,8 +2,6 @@ import os
 from dotenv import load_dotenv
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
-print("----------------- BASE DIR ----------------")
-print(BASEDIR)
 
 load_dotenv(os.path.join(BASEDIR, ".env"))
 
